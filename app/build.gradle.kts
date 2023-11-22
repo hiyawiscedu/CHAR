@@ -38,4 +38,5 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("com.loopj.android:android-async-http:1.4.11")
     implementation("org.jsoup:jsoup:1.13.1")
+    implementation("com.google.code.gson:gson:2.8.6")
 }
