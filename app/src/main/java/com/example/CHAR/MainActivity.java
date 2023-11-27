@@ -3,13 +3,16 @@ package com.example.CHAR;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -21,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean notificationShown = false;
     private static final long DEBOUNCE_DELAY = 30000; // 30 seconds delay between notifications to account for fluctuations
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +58,13 @@ public class MainActivity extends AppCompatActivity {
         createNotificationChannel();
         textPercent = findViewById(R.id.txtper);
         progressBar = findViewById(R.id.Prog);
+        Button btnWifiSettings = findViewById(R.id.wiFiButton);
+        btnWifiSettings.setOnClickListener(v -> openWifiSettings());
         scheduler.scheduleAtFixedRate(this::updateProgressBar, 0, 1, TimeUnit.SECONDS);
+    }
+    private void openWifiSettings() {
+        Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+        startActivity(intent);
     }
     public void updateProgressBar() {
         new Thread(() -> {
@@ -149,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "NotificationChannel.DEFAULT_CHANNEL_ID")
                 .setSmallIcon(R.drawable.ic_launcher_background) // replace with your own icon
                 .setContentTitle("Alert")
-                .setContentText("Water remaining is less than 20%")
+                .setContentText("Water Remaining is Less Than 20%, Need to Replace Jug")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
@@ -160,6 +171,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        scheduler.shutdownNow(); // Important to avoid memory leaks
+        scheduler.shutdownNow();
     }
 }

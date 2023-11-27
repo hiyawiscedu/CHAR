@@ -41,7 +41,8 @@ public class Refill extends AppCompatActivity {
         setContentView(R.layout.activity_refill);
         sharedPreferencesManager = new SharedPreferencesManager(this);
         setupUpdateUIReceiver();
-        scheduleNoonAlarm();
+        //scheduleNoonAlarm();
+        scheduleService();
         updateWaterUsageDisplay();
         Executor executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
@@ -72,6 +73,29 @@ public class Refill extends AppCompatActivity {
             handler.post(() -> {
             });
         });
+    }
+
+    public void scheduleService() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, WaterUsageUpdateService.class);
+        PendingIntent alarmIntent = PendingIntent.getService(this, 0, intent, 0);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        // Set the alarm's trigger time to 12:00 PM
+        // CHANGE THESE TIMES FOR TESTING
+        // 24-HOUR TIME
+        calendar.set(Calendar.HOUR_OF_DAY, 12);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+
+        // If it's already past noon, set it to trigger the next day
+        if (Calendar.getInstance().after(calendar)) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, alarmIntent);
     }
 
     private void updateWaterUsageDisplay() {
@@ -120,29 +144,6 @@ public class Refill extends AppCompatActivity {
         }
     }
 
-    private void scheduleNoonAlarm() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, NoonAlarmReceiver.class);
-        PendingIntent alarmIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        // Set the alarm's trigger time to 12:00 PM
-        calendar.set(Calendar.HOUR_OF_DAY, 7);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 0);
-
-        // If it's already past noon, set it to trigger the next day
-        if (Calendar.getInstance().after(calendar)) {
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
-        }
-
-        // Set the alarm to fire at approximately 12:00 PM, according to the device's clock,
-        // and to repeat once a day.
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, alarmIntent);
-    }
-
     private void setupUpdateUIReceiver() {
         updateUIReceiver = new BroadcastReceiver() {
             @Override
@@ -156,6 +157,8 @@ public class Refill extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 updateUIReceiver, new IntentFilter("UPDATE_WATER_USAGE_DISPLAY"));
     }
+
+
 
     @Override
     protected void onDestroy() {
